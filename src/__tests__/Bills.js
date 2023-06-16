@@ -3,6 +3,7 @@
  */
 
 import {fireEvent, screen, waitFor, within} from "@testing-library/dom"
+import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
 import BillsUI from "../views/BillsUI.js"
 import { bills } from "../fixtures/bills.js"
@@ -13,6 +14,8 @@ import mockedStore from "../__mocks__/store";
 import Bills from "../containers/Bills.js";
 
 import router from "../app/Router.js";
+
+jest.mock("../app/store", () => mockedStore);
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
@@ -40,6 +43,8 @@ describe("Given I am connected as an employee", () => {
       expect(dates).toEqual(datesSorted)
     })
   })
+
+
   describe("When I click on the New Bill button", () => {
     test("Then I should be redirected to the New Bill page", () => {
       const onNavigate = pathname => {
@@ -99,6 +104,33 @@ describe("Given I am connected as an employee", () => {
         expect(handleClickIconEye).toHaveBeenCalled();
 
         expect(modale.classList.contains('show')).toBeTruthy()
+      })
     })
   })
-})})
+  describe('When i navigate to Bills page', () => {
+    test('Then it should fetch bills from mock API GET', async () => {
+      jest.spyOn(mockedStore, "bills");
+      Object.defineProperty(window, "localStorage", {
+        value: localStorageMock,
+      });
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ type: "Employee", email: "a@a" })
+      );
+
+      const root = document.createElement("div");
+      root.setAttribute("id", "root");
+      document.body.append(root);
+      router();
+      window.onNavigate(ROUTES_PATH.Bills);
+
+      await waitFor(() => screen.getByText("Mes notes de frais"));
+
+      const newBillBtn = await screen.findByRole("button", {
+        name: /nouvelle note de frais/i,
+      });
+
+      expect(newBillBtn).toBeTruthy();
+    })
+  })
+})
