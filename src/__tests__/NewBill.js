@@ -12,7 +12,7 @@ import mockStore from "../__mocks__/store.js";
 import { bills } from "../fixtures/bills.js";
 import router from "../app/Router.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom"
 
 const setNewBill = () => {
   return new NewBill({
@@ -82,6 +82,44 @@ describe("Given I am connected as an employee", () => {
       expect(file.files[0].name).toBe('image.png')
     })
 
+    test(('should display no error message when i fill file input corectly'), () => {
+      const newBill = setNewBill();
+      const fileInput = screen.getByTestId('file');
+      const file = new File(["img"], "image.png", {
+        type:  ["image/jpg"],
+      });
+
+      const handleChangeFile = jest.fn(e => { newBill.handleChangeFile(e) });
+      fileInput.addEventListener("change", handleChangeFile);
+      fireEvent.change(fileInput, {
+        target: {
+          files: [file],
+        },
+      })
+
+      expect(handleChangeFile).toHaveBeenCalled();
+      expect(fileInput).not.toHaveClass('is-invalid');
+    })
+
+    test(('should display error message when i fill file input incorectly'), () => {
+      const newBill = setNewBill();
+      const fileInput = screen.getByTestId('file');
+      const file = new File(["pdf"], "image.pdf", {
+        type:  ["image/pdf"],
+      });
+
+      const handleChangeFile = jest.fn(e => { newBill.handleChangeFile(e) });
+      fileInput.addEventListener("change", handleChangeFile);
+      fireEvent.change(fileInput, {
+        target: {
+          files: [file],
+        },
+      })
+
+      expect(handleChangeFile).toHaveBeenCalled();
+      expect(fileInput.value).toBe('')
+    })
+
     test('should return to bills page when i submit the form', async () => {
       //to-do write assertion
       const onNavigate = pathname => {
@@ -125,28 +163,7 @@ describe("Given I am connected as an employee", () => {
       userEvent.click(submitButton);
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
-    })
-
-    test(('should display no error message when i fill file input corectly'), () => {
-      const newBill = setNewBill();
-      const fileInput = screen.getByTestId('file');
-      //const fileValidation = jest.spyOn(newBill, 'fileValidation');
-      const file = new File(["img"], "image.png", {
-        type:  ["image/jpg"],
-      });
-
-      const handleChangeFile = jest.fn(e => { newBill.handleChangeFile(e) });
-      fileInput.addEventListener("change", handleChangeFile);
-      fireEvent.change(fileInput, {
-        target: {
-          files: [file],
-        },
-      })
-
-      expect(handleChangeFile).toHaveBeenCalled();
-      //expect(fileValidation.mock.results[0].value).toBeTruthy();
-      expect(fileInput).not.toHaveClass('is-invalid');
-    })
+    })    
 
     //Test d'intégration POST
     describe("When I do fill fields in correct format and I click on submit button", () => {
@@ -213,4 +230,5 @@ const getFile = (fileName, fileType) => {
   });
 
   return file;
+
 };

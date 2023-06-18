@@ -22,7 +22,7 @@ export default class NewBill {
     const fileName = filePath[filePath.length-1]
     const fileType = fileName.split('.')[1]
     if (fileType !== 'jpg' && fileType !== 'jpeg' && fileType !== 'png') {
-      alert('Veuillez sélectionner un fichier de type jpg, jpeg ou png')
+      window.alert('Veuillez sélectionner un fichier de type jpg, jpeg ou png')
       e.target.value = ''
       return
     }
