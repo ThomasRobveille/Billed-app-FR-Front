@@ -7,11 +7,12 @@ import userEvent from "@testing-library/user-event";
 import NewBillUI from "../views/NewBillUI.js"
 import NewBill from "../containers/NewBill.js"
 
-import { ROUTES } from "../constants/routes.js";
+import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 import mockStore from "../__mocks__/store.js";
 import { bills } from "../fixtures/bills.js";
 import router from "../app/Router.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
+import "@testing-library/jest-dom";
 
 const setNewBill = () => {
   return new NewBill({
@@ -34,7 +35,23 @@ beforeAll(() => {
       email: "a@a",
     })
   );
-})
+});
+
+beforeEach(() => {
+  const root = document.createElement("div");
+  root.setAttribute("id", "root");
+  document.body.append(root);
+  router();
+
+  document.body.innerHTML = NewBillUI();
+
+  window.onNavigate(ROUTES_PATH.NewBill);
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+  document.body.innerHTML = "";
+});
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on NewBill Page", () => {
@@ -110,100 +127,29 @@ describe("Given I am connected as an employee", () => {
       expect(handleSubmit).toHaveBeenCalledTimes(1);
     })
 
-    // test("Then no error message for the file input should be displayed", () => {
-    //   const onNavigate = pathname => {
-    //     document.body.innerHTML = ROUTES({ pathname });
-    //   };
-      
-    //   const newBill = new NewBill({
-    //     document,
-    //     onNavigate,
-    //     store: mockStore,
-    //     localStorage: window.localStorage
-    //   })
+    test(('should display no error message when i fill file input corectly'), () => {
+      const newBill = setNewBill();
+      const fileInput = screen.getByTestId('file');
+      //const fileValidation = jest.spyOn(newBill, 'fileValidation');
+      const file = new File(["img"], "image.png", {
+        type:  ["image/jpg"],
+      });
 
-    //   const handleChangeFile = jest.spyOn(newBill, "handleChangeFile");
-    //   const imageInput = screen.getByTestId("file");
-    //   const fileValidation = jest.spyOn(newBill, "fileValidation");
+      const handleChangeFile = jest.fn(e => { newBill.handleChangeFile(e) });
+      fileInput.addEventListener("change", handleChangeFile);
+      fireEvent.change(fileInput, {
+        target: {
+          files: [file],
+        },
+      })
 
-    //   imageInput.addEventListener("change", handleChangeFile);
-
-    //   fireEvent.change(imageInput, {
-    //     target: {
-    //       files: [
-    //         new File(["image"], "image.jpg", {
-    //           type: "image/jpg",
-    //         }),
-    //       ],
-    //     },
-    //   });
-
-    //   expect(handleChangeFile).toHaveBeenCalledTimes(1);
-    //   expect(fileValidation.mock.results[0].value).toBeTruthy();
-
-    //   expect(imageInput).not.toHaveClass("is-invalid");
-    // });
+      expect(handleChangeFile).toHaveBeenCalled();
+      //expect(fileValidation.mock.results[0].value).toBeTruthy();
+      expect(fileInput).not.toHaveClass('is-invalid');
+    })
 
     //Test d'intégration POST
     describe("When I do fill fields in correct format and I click on submit button", () => {
-      // test("Then the submission process should work properly, and I should be sent on the Bills Page", async () => {
-      //   const onNavigate = pathname => {
-      //     document.body.innerHTML = ROUTES({ pathname });
-      //   };
-
-      //   const newBill = new NewBill({
-      //     document,
-      //     onNavigate,
-      //     store: mockStore,
-      //     localStorage: window.localStorage,
-      //   });
-
-      //   const inputData = bills[0];
-
-      //   const newBillForm = screen.getByTestId("form-new-bill");
-
-      //   const handleSubmit = jest.fn(newBill.handleSubmit);
-      //   const imageInput = screen.getByTestId("file");
-
-      //   const file = getFile(inputData.fileName, ["image/jpg"])
-
-      //   const fileValidation = jest.spyOn(newBill, "fileValidation");
-
-      //   // On remplit les champs
-      //   selectExpenseType(inputData.type);
-      //   userEvent.type(getExpenseName(), inputData.name);
-      //   userEvent.type(getAmount(), inputData.amount.toString());
-      //   userEvent.type(getDate(), inputData.date);
-      //   userEvent.type(getVat(), inputData.vat.toString());
-      //   userEvent.type(getPct(), inputData.pct.toString());
-      //   userEvent.type(getCommentary(), inputData.commentary);
-      //   await userEvent.upload(imageInput, file);
-
-      //   // On s'assure que les données entrées requises sont valides
-      //   expect(
-      //     selectExpenseType(inputData.type).validity.valueMissing
-      //   ).toBeFalsy();
-      //   expect(getDate().validity.valueMissing).toBeFalsy();
-      //   expect(getAmount().validity.valueMissing).toBeFalsy();
-      //   expect(getPct().validity.valueMissing).toBeFalsy();
-      //   expect(fileValidation(file)).toBeTruthy();
-
-      //   newBill.fileName = file.name;
-
-      //   // On s'assure que le formulaire est soumettable
-      //   const submitButton = screen.getByRole("button", { name: /envoyer/i });
-      //   expect(submitButton.type).toBe("submit");
-
-      //   // On soumet le formulaire
-      //   //newBillForm.addEventListener("submit", handleSubmit);
-      //   userEvent.click(submitButton);
-
-      //   expect(handleSubmit).toHaveBeenCalledTimes(1);
-
-      //   // On s'assure qu'on est bien renvoyé sur la page Bills
-      //   expect(screen.getByText(/Mes notes de frais/i)).toBeVisible();
-      // });
-
       test("Then a new bill should be created", async () => {
         const createBill = jest.fn(mockStore.bills().create);
         const updateBill = jest.fn(mockStore.bills().update);
